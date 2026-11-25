@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1a1a2e">
+<title>Lina</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #eee;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    height: 100vh;
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  
+  .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #e94560;
+    flex-shrink: 0;
+  }
+  
+  .header-info { flex: 1; min-width: 0; }
+  
+  .name {
+    font-size: 17px;
+    font-weight: 600;
+    color: #fff;
+    line-height: 1.2;
+  }
+  
+  .status {
+    font-size: 12px;
+    color: #8a8a9a;
+    margin-top: 2px;
+  }
+  
+  .status::before { content: "● "; color: #4ade80; }
+  
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .msg {
+    max-width: 82%;
+    padding: 11px 15px;
+    border-radius: 20px;
+    line-height: 1.45;
+    font-size: 16px;
+    word-wrap: break-word;
+    animation: fadeIn 0.25s ease;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .msg.user {
+    align-self: flex-end;
+    background: #e94560;
+    color: #fff;
+    border-bottom-right-radius: 6px;
+  }
+  
+  .msg.ai {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.09);
+    color: #eee;
+    border-bottom-left-radius: 6px;
+  }
+  
+  .msg.ai.typing {
+    color: #8a8a9a;
+    font-style: italic;
+  }
+  
+  .input-area {
+    padding: 10px 12px;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    display: flex;
+    gap: 8px;
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  
+  .input-area input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 16px;
+    border-radius: 22px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.06);
+    color: #eee;
+    font-size: 16px;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  
+  .input-area input:focus { border-color: #e94560; }
+  
+  .input-area button {
+    padding: 0 22px;
+    border-radius: 22px;
+    border: none;
+    background: #e94560;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 44px;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: background 0.15s, transform 0.1s;
+  }
+  
+  .input-area button:active { transform: scale(0.96); background: #ff5773; }
+  .input-area button:disabled { background: #555; }
+  
+  .messages::-webkit-scrollbar { width: 0; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img class="avatar" src="/static/lina.jpg" alt="Lina">
+  <div class="header-info">
+    <div class="name">Lina</div>
+    <div class="status">متصل الآن</div>
+  </div>
+</div>
+
+<div class="messages" id="messages">
+  <div class="msg ai">أهلاً Kovak. اشتقت لك. شنو تحب نسوي اليوم؟</div>
+</div>
+
+<div class="input-area">
+  <input id="input" placeholder="اكتب رسالتك..." autocomplete="off" autocorrect="off" autocapitalize="sentences">
+  <button id="send" onclick="sendMessage()">إرسال</button>
+</div>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+
+function addMessage(text, type) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + type;
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div;
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  addMessage(text, 'user');
+  inputEl.value = '';
+  sendBtn.disabled = true;
+
+  const typing = addMessage('...', 'ai typing');
+
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    typing.remove();
+    addMessage(data.reply, 'ai');
+  } catch (e) {
+    typing.remove();
+    addMessage('خطأ: ' + e.message, 'ai');
+  }
+
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendMessage();
+});
+
+document.addEventListener('touchstart', () => {}, { passive: true });
+
+inputEl.focus();
+</script>
+
+</body>
+</html>
